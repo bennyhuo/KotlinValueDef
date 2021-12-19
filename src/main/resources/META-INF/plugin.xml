@@ -1,0 +1,31 @@
+<idea-plugin>
+    <id>com.bennyhuo.kotlin.intdef</id>
+    <name>Kotlin IntDef</name>
+    <vendor email="bennyhuo@kotliner.cn" url="http://www.bennyhuo.com">Benny Huo</vendor>
+
+    <description><![CDATA[
+    Support inspection on annotations like IntDef, StringDef in Kotlin.
+    ]]></description>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+
+        <localInspection implementationClass="com.bennyhuo.kotlin.valuetype.ValueTypeInspection"
+            groupPath="Kotlin"
+            groupBundle="messages.ValueType" groupKey="inspection.valuetype.name.display.name"
+            enabledByDefault="true"
+            level="ERROR"
+            language="kotlin"
+            key="inspection.valuetype.name.display.name" bundle="messages.ValueType"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
