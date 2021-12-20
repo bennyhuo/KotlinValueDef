@@ -2,6 +2,7 @@ package com.bennyhuo.kotlin.valuetype
 
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.idea.debugger.sequence.psi.resolveType
 import org.jetbrains.kotlin.idea.inspections.AbstractPrimitiveRangeToInspection.Companion.constantValueOrNull
 import org.jetbrains.kotlin.idea.refactoring.fqName.fqName
@@ -36,6 +37,16 @@ fun KtAnnotationEntry.fqNameMatches(fqName: String): Boolean {
     val shortName = shortName?.asString() ?: return false
     return fqName.endsWith(shortName) && fqName == getQualifiedName()
 }
+
+fun AnnotationDescriptor.value(): ConstantValue<*>? {
+    return allValueArguments[Name.identifier("value")]
+}
+
+val KtAnnotationEntry.valueTypeAnnotation: AnnotationDescriptor?
+    get() {
+        return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
+            ?.annotationClass?.annotations?.findAnnotation(VALUE_TYPE_FQNAME)
+    }
 
 fun KtNameReferenceExpression.definedConstantValueOrNull(): ConstantValue<*>? {
     return resolveType().definedConstantValueOrNull()

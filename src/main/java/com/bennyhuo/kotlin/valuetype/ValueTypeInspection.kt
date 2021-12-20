@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.idea.inspections.AbstractKotlinInspection
 import org.jetbrains.kotlin.idea.inspections.AbstractPrimitiveRangeToInspection.Companion.constantValueOrNull
+import org.jetbrains.kotlin.idea.refactoring.fqName.getKotlinFqName
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.nj2k.postProcessing.resolve
@@ -43,11 +44,47 @@ class ValueTypeInspection : AbstractKotlinInspection() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : KtVisitorVoid() {
 
+            override fun visitTypeReference(typeReference: KtTypeReference) {
+                super.visitTypeReference(typeReference)
+                val valueTypeAnnotations = typeReference.annotationEntries.map { it to it.valueTypeAnnotation }
+                    .filter { it.second != null }
+                if (valueTypeAnnotations.size > 1) {
+                    holder.registerProblem(
+                        typeReference,
+                        ValueTypeBundle.message(
+                            "inspection.valuetype.annotation.error.display",
+                            valueTypeAnnotations.map { it.first.text }),
+                        ProblemHighlightType.GENERIC_ERROR
+                    )
+                }
+
+                if (valueTypeAnnotations.size == 1) {
+                    val valueTypeAnnotation = valueTypeAnnotations.single().second!!
+                    val constantValue = valueTypeAnnotation.value()?.values()?.firstOrNull()
+                    if (constantValue != null) {
+                        val constantValueType = constantValue::class.qualifiedName
+                        val declaredTypeFqName =
+                            typeReference.typeElement.safeAs<KtUserType>()?.referenceExpression?.resolve()
+                                ?.getKotlinFqName()?.asString()
+                        if (constantValue::class.qualifiedName != declaredTypeFqName) {
+                            holder.registerProblem(
+                                typeReference,
+                                ValueTypeBundle.message(
+                                    "inspection.valuetype.type.error.display",
+                                    constantValueType, declaredTypeFqName
+                                ),
+                                ProblemHighlightType.GENERIC_ERROR
+                            )
+                        }
+                    }
+                }
+            }
+
             override fun visitNamedFunction(function: KtNamedFunction) {
                 super.visitNamedFunction(function)
                 val returnTypeValues = function.type().definedConstantValueOrNull() ?: return
                 val returningExpression = function.returningExpression ?: return
-                
+
                 if (function.isReturningUnsafeValueType()) return
                 val possibleReturnValues = function.possibleReturnValuesOrNull()
                 checkValueType(holder, returningExpression, possibleReturnValues, returnTypeValues)
@@ -67,10 +104,11 @@ class ValueTypeInspection : AbstractKotlinInspection() {
             override fun visitBinaryExpression(expression: KtBinaryExpression) {
                 super.visitBinaryExpression(expression)
                 if (expression.operationToken == KtTokens.EQ) {
-                    val values = expression.left.safeAs<KtNameReferenceExpression>()?.definedConstantValueOrNull() ?: return
+                    val values =
+                        expression.left.safeAs<KtNameReferenceExpression>()?.definedConstantValueOrNull() ?: return
                     val right = expression.right ?: return
                     if (right.isUnsafeValueType()) return
-                    
+
                     val value = right.possibleConstantValuesOrNull()
                     checkValueType(holder, right, value, values)
                 }
@@ -78,7 +116,7 @@ class ValueTypeInspection : AbstractKotlinInspection() {
 
             override fun visitCallExpression(callExpression: KtCallExpression) {
                 super.visitCallExpression(callExpression)
-                
+
                 // 1. find value parameters type
                 val ktNamedFunction = callExpression.referenceExpression()?.resolve() as? KtNamedFunction ?: return
                 val constParameters = ktNamedFunction.valueParameters.mapIndexedNotNull { index, parameter ->
