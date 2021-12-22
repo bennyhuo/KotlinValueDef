@@ -6,7 +6,10 @@ import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.idea.debugger.sequence.psi.resolveType
 import org.jetbrains.kotlin.idea.inspections.AbstractPrimitiveRangeToInspection.Companion.constantValueOrNull
 import org.jetbrains.kotlin.idea.refactoring.fqName.fqName
+import org.jetbrains.kotlin.idea.refactoring.fqName.getKotlinFqName
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.nj2k.postProcessing.resolve
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.lastBlockStatementOrThis
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -42,28 +45,50 @@ fun AnnotationDescriptor.value(): ConstantValue<*>? {
     return allValueArguments[Name.identifier("value")]
 }
 
-val KtAnnotationEntry.valueTypeAnnotation: AnnotationDescriptor?
-    get() {
-        return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
-            ?.annotationClass?.annotations?.findAnnotation(VALUE_TYPE_FQNAME)
-    }
+fun KtAnnotationEntry.findAllValueTypeAnnotations(): List<AnnotationDescriptor> {
+    return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
+        ?.annotationClass?.annotations?.let { annotations -> 
+            valueTypes.values.mapNotNull { annotations.findAnnotation(FqName(it)) }
+        } ?: emptyList()
+}
+
+fun KtAnnotationEntry.findFirstValueTypeAnnotation(): AnnotationDescriptor? {
+    return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
+        ?.annotationClass?.annotations?.let { annotations ->
+            valueTypes.values.asSequence().mapNotNull { 
+                annotations.findAnnotation(FqName(it)) 
+            }.firstOrNull()
+        }
+}
 
 fun KtNameReferenceExpression.definedConstantValueOrNull(): ConstantValue<*>? {
     return resolveType().definedConstantValueOrNull()
 }
 
+fun KtTypeReference.declaredTypeFqName(): String? {
+    return typeElement.safeAs<KtUserType>()?.referenceExpression?.resolve()
+        ?.getKotlinFqName()?.asString()
+}
+
+val KotlinType?.valueTypeFqName: FqName?
+    get() = valueTypes[this?.fqName?.asString()]?.let { FqName(it) }
+
 fun KotlinType?.definedConstantValueOrNull(): ConstantValue<*>? {
+    val valueTypeFqName = this.valueTypeFqName ?: return null
     return this?.annotations?.firstNotNullOfOrNull {
         it.annotationClass?.annotations
-            ?.findAnnotation(VALUE_TYPE_FQNAME)
+            ?.findAnnotation(valueTypeFqName)
             ?.allValueArguments?.get(Name.identifier("value"))
     }
 }
 
 val KotlinType.valueTypeAnnotation: AnnotationDescriptor?
-    get() = this.annotations.firstNotNullOfOrNull {
-        it.annotationClass?.annotations
-            ?.findAnnotation(VALUE_TYPE_FQNAME)
+    get() {
+        val valueTypeFqName = this.valueTypeFqName ?: return null
+        return this.annotations.firstNotNullOfOrNull {
+            it.annotationClass?.annotations
+                ?.findAnnotation(valueTypeFqName)
+        }
     }
 
 fun KotlinType.isCompatibleWith(otherType: KotlinType): Boolean {

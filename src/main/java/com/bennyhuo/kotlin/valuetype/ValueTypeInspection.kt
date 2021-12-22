@@ -5,7 +5,6 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.idea.inspections.AbstractKotlinInspection
-import org.jetbrains.kotlin.idea.inspections.AbstractPrimitiveRangeToInspection.Companion.constantValueOrNull
 import org.jetbrains.kotlin.idea.refactoring.fqName.getKotlinFqName
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.FqName
@@ -18,9 +17,6 @@ import org.jetbrains.kotlin.resolve.constants.ConstantValue
 /**
  * Created by benny.
  */
-const val VALUE_TYPE_NAME = "com.bennyhuo.kotlin.valuetype.ValueType"
-val VALUE_TYPE_FQNAME = FqName(VALUE_TYPE_NAME)
-
 const val UNSAFE_VALUE_TYPE_NAME = "com.bennyhuo.kotlin.valuetype.UnsafeValueType"
 val UNSAFE_VALUE_TYPE_FQNAME = FqName(UNSAFE_VALUE_TYPE_NAME)
 
@@ -44,10 +40,35 @@ class ValueTypeInspection : AbstractKotlinInspection() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : KtVisitorVoid() {
 
+            override fun visitClass(klass: KtClass) {
+                super.visitClass(klass)
+                if (klass.isAnnotation()) {
+                    val valueTypeAnnotations = klass.annotationEntries.filter {
+                        it.getQualifiedName() in valueTypes.values
+                    }
+                    if (valueTypeAnnotations.size > 1) {
+                        holder.registerProblem(
+                            klass,
+                            ValueTypeBundle.message(
+                                "inspection.valuetype.annotation.define.error.display",
+                                valueTypeAnnotations.map { it.text }),
+                            ProblemHighlightType.GENERIC_ERROR
+                        )
+                    }
+                }
+            }
+
             override fun visitTypeReference(typeReference: KtTypeReference) {
                 super.visitTypeReference(typeReference)
-                val valueTypeAnnotations = typeReference.annotationEntries.map { it to it.valueTypeAnnotation }
-                    .filter { it.second != null }
+
+                val declaredTypeFqName = typeReference.declaredTypeFqName() ?: return
+
+                val valueTypeAnnotations = typeReference.annotationEntries.map {
+                    it to it.findFirstValueTypeAnnotation()
+                }.filter {
+                    it.second != null
+                }
+
                 if (valueTypeAnnotations.size > 1) {
                     holder.registerProblem(
                         typeReference,
@@ -56,26 +77,21 @@ class ValueTypeInspection : AbstractKotlinInspection() {
                             valueTypeAnnotations.map { it.first.text }),
                         ProblemHighlightType.GENERIC_ERROR
                     )
+                    return
                 }
 
                 if (valueTypeAnnotations.size == 1) {
-                    val valueTypeAnnotation = valueTypeAnnotations.single().second!!
-                    val constantValue = valueTypeAnnotation.value()?.values()?.firstOrNull()
-                    if (constantValue != null) {
-                        val constantValueType = constantValue::class.qualifiedName
-                        val declaredTypeFqName =
-                            typeReference.typeElement.safeAs<KtUserType>()?.referenceExpression?.resolve()
-                                ?.getKotlinFqName()?.asString()
-                        if (constantValue::class.qualifiedName != declaredTypeFqName) {
-                            holder.registerProblem(
-                                typeReference,
-                                ValueTypeBundle.message(
-                                    "inspection.valuetype.type.error.display",
-                                    constantValueType, declaredTypeFqName
-                                ),
-                                ProblemHighlightType.GENERIC_ERROR
-                            )
-                        }
+                    val valueTypeAnnotation = valueTypeAnnotations.first().second!!
+                    val valueTypeAnnotationFqName = valueTypeAnnotation.fqName?.asString()
+                    if (valueTypes[declaredTypeFqName] != valueTypeAnnotationFqName) {
+                        holder.registerProblem(
+                            typeReference,
+                            ValueTypeBundle.message(
+                                "inspection.valuetype.type.error.display",
+                                valueTypeAnnotationFqName, declaredTypeFqName
+                            ),
+                            ProblemHighlightType.GENERIC_ERROR
+                        )
                     }
                 }
             }
