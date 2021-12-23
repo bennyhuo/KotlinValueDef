@@ -16,7 +16,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
 
-        <localInspection implementationClass="com.bennyhuo.kotlin.valuetype.ValueTypeInspection"
+        <localInspection implementationClass="com.bennyhuo.kotlin.valuedef.ValueDefInspection"
             groupPath="Kotlin"
             groupBundle="messages.ValueType" groupKey="inspection.valuetype.name.display.name"
             enabledByDefault="true"

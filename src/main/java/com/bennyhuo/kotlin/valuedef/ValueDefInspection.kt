@@ -1,13 +1,11 @@
-package com.bennyhuo.kotlin.valuetype
+package com.bennyhuo.kotlin.valuedef
 
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.idea.inspections.AbstractKotlinInspection
-import org.jetbrains.kotlin.idea.refactoring.fqName.getKotlinFqName
 import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.nj2k.postProcessing.resolve
 import org.jetbrains.kotlin.nj2k.postProcessing.type
 import org.jetbrains.kotlin.psi.*
@@ -17,10 +15,7 @@ import org.jetbrains.kotlin.resolve.constants.ConstantValue
 /**
  * Created by benny.
  */
-const val UNSAFE_VALUE_TYPE_NAME = "com.bennyhuo.kotlin.valuetype.UnsafeValueType"
-val UNSAFE_VALUE_TYPE_FQNAME = FqName(UNSAFE_VALUE_TYPE_NAME)
-
-class ValueTypeInspection : AbstractKotlinInspection() {
+class ValueDefInspection : AbstractKotlinInspection() {
 
     fun checkValueType(
         holder: ProblemsHolder,
@@ -31,7 +26,7 @@ class ValueTypeInspection : AbstractKotlinInspection() {
         if (expressionValue !in valuesInType) {
             holder.registerProblem(
                 element,
-                ValueTypeBundle.message("inspection.valuetype.error.display", valuesInType.values()),
+                ValueDefBundle.message("inspection.valuetype.error.display", valuesInType.values()),
                 ProblemHighlightType.GENERIC_ERROR
             )
         }
@@ -44,12 +39,12 @@ class ValueTypeInspection : AbstractKotlinInspection() {
                 super.visitClass(klass)
                 if (klass.isAnnotation()) {
                     val valueTypeAnnotations = klass.annotationEntries.filter {
-                        it.getQualifiedName() in valueTypes.values
+                        it.getQualifiedName() in valueDefs.values
                     }
                     if (valueTypeAnnotations.size > 1) {
                         holder.registerProblem(
                             klass,
-                            ValueTypeBundle.message(
+                            ValueDefBundle.message(
                                 "inspection.valuetype.annotation.define.error.display",
                                 valueTypeAnnotations.map { it.text }),
                             ProblemHighlightType.GENERIC_ERROR
@@ -64,7 +59,7 @@ class ValueTypeInspection : AbstractKotlinInspection() {
                 val declaredTypeFqName = typeReference.declaredTypeFqName() ?: return
 
                 val valueTypeAnnotations = typeReference.annotationEntries.map {
-                    it to it.findFirstValueTypeAnnotation()
+                    it to it.findFirstValueDefAnnotation()
                 }.filter {
                     it.second != null
                 }
@@ -72,7 +67,7 @@ class ValueTypeInspection : AbstractKotlinInspection() {
                 if (valueTypeAnnotations.size > 1) {
                     holder.registerProblem(
                         typeReference,
-                        ValueTypeBundle.message(
+                        ValueDefBundle.message(
                             "inspection.valuetype.annotation.error.display",
                             valueTypeAnnotations.map { it.first.text }),
                         ProblemHighlightType.GENERIC_ERROR
@@ -83,10 +78,10 @@ class ValueTypeInspection : AbstractKotlinInspection() {
                 if (valueTypeAnnotations.size == 1) {
                     val valueTypeAnnotation = valueTypeAnnotations.first().second!!
                     val valueTypeAnnotationFqName = valueTypeAnnotation.fqName?.asString()
-                    if (valueTypes[declaredTypeFqName] != valueTypeAnnotationFqName) {
+                    if (valueDefs[declaredTypeFqName] != valueTypeAnnotationFqName) {
                         holder.registerProblem(
                             typeReference,
-                            ValueTypeBundle.message(
+                            ValueDefBundle.message(
                                 "inspection.valuetype.type.error.display",
                                 valueTypeAnnotationFqName, declaredTypeFqName
                             ),

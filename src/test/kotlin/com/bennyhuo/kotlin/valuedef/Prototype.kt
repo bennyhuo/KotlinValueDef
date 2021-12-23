@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.valuetype
+package com.bennyhuo.kotlin.valuedef
 
 /**
  * Created by benny.

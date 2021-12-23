@@ -7,7 +7,7 @@ This is similar with the Android annotations like @IntDef and @StringDef but mor
 ## Sample
 
 ```kotlin
-package com.bennyhuo.kotlin.valuetype
+package com.bennyhuo.kotlin.valuedef
 
 /**
  * Created by benny.
