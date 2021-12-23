@@ -39,7 +39,7 @@ class ValueDefInspection : AbstractKotlinInspection() {
                 super.visitClass(klass)
                 if (klass.isAnnotation()) {
                     val valueTypeAnnotations = klass.annotationEntries.filter {
-                        it.getQualifiedName() in valueDefs.values
+                        it.getQualifiedName() in valueDefs
                     }
                     if (valueTypeAnnotations.size > 1) {
                         holder.registerProblem(
@@ -78,12 +78,12 @@ class ValueDefInspection : AbstractKotlinInspection() {
                 if (valueTypeAnnotations.size == 1) {
                     val valueTypeAnnotation = valueTypeAnnotations.first().second!!
                     val valueTypeAnnotationFqName = valueTypeAnnotation.fqName?.asString()
-                    if (valueDefs[declaredTypeFqName] != valueTypeAnnotationFqName) {
+                    if (valueTypeAnnotationFqName in valueDefTypeMap[declaredTypeFqName]!!) {
                         holder.registerProblem(
                             typeReference,
                             ValueDefBundle.message(
                                 "inspection.valuetype.type.error.display",
-                                valueTypeAnnotationFqName, declaredTypeFqName
+                                valueTypeAnnotations.first().first.text, declaredTypeFqName
                             ),
                             ProblemHighlightType.GENERIC_ERROR
                         )

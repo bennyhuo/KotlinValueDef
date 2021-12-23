@@ -44,16 +44,16 @@ fun AnnotationDescriptor.value(): ConstantValue<*>? {
 
 fun KtAnnotationEntry.findAllValueDefAnnotations(): List<AnnotationDescriptor> {
     return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
-        ?.annotationClass?.annotations?.let { annotations -> 
-            valueDefs.values.mapNotNull { annotations.findAnnotation(FqName(it)) }
+        ?.annotationClass?.annotations?.let { annotations ->
+            valueDefs.mapNotNull { annotations.findAnnotation(FqName(it)) }
         } ?: emptyList()
 }
 
 fun KtAnnotationEntry.findFirstValueDefAnnotation(): AnnotationDescriptor? {
     return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
         ?.annotationClass?.annotations?.let { annotations ->
-            valueDefs.values.asSequence().mapNotNull { 
-                annotations.findAnnotation(FqName(it)) 
+            valueDefs.asSequence().mapNotNull {
+                annotations.findAnnotation(FqName(it))
             }.firstOrNull()
         }
 }
@@ -66,28 +66,21 @@ fun KtTypeReference.declaredTypeFqName(): String? {
     return analyze(BodyResolveMode.PARTIAL).get(BindingContext.TYPE, this)?.fqName?.asString()
 }
 
-val KotlinType?.valueDefFqName: FqName?
-    get() = valueDefs[this?.fqName?.asString()]?.let { FqName(it) }
-
 fun KotlinType?.definedConstantValueOrNull(): ConstantValue<*>? {
-    val valueTypeFqName = this.valueDefFqName ?: return null
+    val valueDefNames = valueDefTypeMap[this?.fqName?.asString()] ?: return null
     return this?.annotations?.firstNotNullOfOrNull {
         it.annotationClass?.annotations
-            ?.findAnnotation(valueTypeFqName)
-            ?.let { 
-                valueDefGetters[valueTypeFqName.asString()]!!.invoke(it)
+            ?.let { annotations ->
+                val annotationDescriptor = valueDefNames.asSequence().mapNotNull {
+                    annotations.findAnnotation(FqName(it))?.fqName
+                }.firstOrNull()
+                if (annotationDescriptor == null) null
+                else {
+                    valueDefGetters[annotationDescriptor.asString()]!!.invoke(it)
+                }
             }
     }
 }
-
-val KotlinType.valueDefAnnotation: AnnotationDescriptor?
-    get() {
-        val valueDefFqName = this.valueDefFqName ?: return null
-        return this.annotations.firstNotNullOfOrNull {
-            it.annotationClass?.annotations
-                ?.findAnnotation(valueDefFqName)
-        }
-    }
 
 fun KtExpression.possibleConstantValuesOrNull(): Any? {
     return constantValueOrNull()?.value ?: resolveType().definedConstantValueOrNull()

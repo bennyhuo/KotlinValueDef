@@ -33,10 +33,13 @@ const val INT_RANGE_VALUE_DEF_NAME = "com.bennyhuo.kotlin.valuedef.IntRangeDef"
 
 const val UNSAFE_VALUE_TYPE_NAME = "com.bennyhuo.kotlin.valuedef.UnsafeDef"
 
-val valueDefs = mapOf(
-    INT_TYPE_NAME to INT_VALUE_DEF_NAME,
-    INT_TYPE_NAME to INT_RANGE_VALUE_DEF_NAME,
-    STRING_TYPE_NAME to STRING_VALUE_DEF_NAME
+val valueDefs = listOf(
+    INT_VALUE_DEF_NAME, INT_RANGE_VALUE_DEF_NAME, STRING_VALUE_DEF_NAME
+)
+
+val valueDefTypeMap = mapOf(
+    INT_TYPE_NAME to listOf(INT_VALUE_DEF_NAME, INT_RANGE_VALUE_DEF_NAME),
+    STRING_TYPE_NAME to listOf(STRING_VALUE_DEF_NAME)
 )
 
 val valueDefGetters = mapOf(
