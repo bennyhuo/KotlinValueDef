@@ -1,4 +1,4 @@
-# ValueType
+# ValueDef
 
 A IntelliJ plugin to provide check on 'value type' which is limited to numerical constant values. 
 
