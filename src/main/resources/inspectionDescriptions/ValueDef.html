@@ -1,0 +1,28 @@
+<html>
+<body>
+<p>This is similar with the Android annotations like @IntDef and @StringDef and more.</p>
+<!-- tooltip end -->
+<p>Kotlin doesn't provide types that only hold specific constant values. </p>
+
+<p>For example, you declare a String variable with three valid values for it, it is not easy to guarantee the variable holding the right value.</p>
+
+<code lang="kotlin">
+    var color: String = "red"
+    ...
+    // only "red", "green", "yellow" are acceptable, but 'color' may be any valid String value.
+    setTrafficLightColor(color)
+</code>
+
+So you should use this inspection to help you like this: 
+
+<code lang="kotlin">
+    @Target(AnnotationTarget.TYPE)
+    @StringDef("red", "yellow", "green")
+    annotation class TrafficLightColor
+    
+    var color: @TrafficLightColor String = "red"
+    color = "blue" // Error: Value mismatch. Must be in [red, yellow, green].
+</code>
+
+</body>
+</html>

@@ -72,11 +72,11 @@ fun KotlinType?.definedConstantValueOrNull(): ConstantValue<*>? {
         it.annotationClass?.annotations
             ?.let { annotations ->
                 val annotationDescriptor = valueDefNames.asSequence().mapNotNull {
-                    annotations.findAnnotation(FqName(it))?.fqName
+                    annotations.findAnnotation(FqName(it))
                 }.firstOrNull()
                 if (annotationDescriptor == null) null
                 else {
-                    valueDefGetters[annotationDescriptor.asString()]!!.invoke(it)
+                    valueDefGetters[annotationDescriptor.fqName?.asString()]!!.invoke(annotationDescriptor)
                 }
             }
     }

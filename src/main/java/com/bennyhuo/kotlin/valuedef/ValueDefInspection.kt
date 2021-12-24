@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.resolve.constants.ConstantValue
  */
 class ValueDefInspection : AbstractKotlinInspection() {
 
-    fun checkValueType(
+    fun checkValue(
         holder: ProblemsHolder,
         element: PsiElement,
         expressionValue: Any?,
@@ -26,8 +26,8 @@ class ValueDefInspection : AbstractKotlinInspection() {
         if (expressionValue !in valuesInType) {
             holder.registerProblem(
                 element,
-                ValueDefBundle.message("inspection.valuetype.error.display", valuesInType.values()),
-                ProblemHighlightType.GENERIC_ERROR
+                "inspection.valuedef.error.value.mismatch",
+                valuesInType.values()
             )
         }
     }
@@ -38,16 +38,14 @@ class ValueDefInspection : AbstractKotlinInspection() {
             override fun visitClass(klass: KtClass) {
                 super.visitClass(klass)
                 if (klass.isAnnotation()) {
-                    val valueTypeAnnotations = klass.annotationEntries.filter {
+                    val valueDefAnnotations = klass.annotationEntries.filter {
                         it.getQualifiedName() in valueDefs
                     }
-                    if (valueTypeAnnotations.size > 1) {
+                    if (valueDefAnnotations.size > 1) {
                         holder.registerProblem(
                             klass,
-                            ValueDefBundle.message(
-                                "inspection.valuetype.annotation.define.error.display",
-                                valueTypeAnnotations.map { it.text }),
-                            ProblemHighlightType.GENERIC_ERROR
+                            "inspection.valuedef.error.type.conflicts",
+                            valueDefAnnotations.map { it.text }
                         )
                     }
                 }
@@ -67,10 +65,8 @@ class ValueDefInspection : AbstractKotlinInspection() {
                 if (valueTypeAnnotations.size > 1) {
                     holder.registerProblem(
                         typeReference,
-                        ValueDefBundle.message(
-                            "inspection.valuetype.annotation.error.display",
-                            valueTypeAnnotations.map { it.first.text }),
-                        ProblemHighlightType.GENERIC_ERROR
+                        "inspection.valuedef.error.def.conflicts",
+                        valueTypeAnnotations.map { it.first.text }
                     )
                     return
                 }
@@ -78,14 +74,11 @@ class ValueDefInspection : AbstractKotlinInspection() {
                 if (valueTypeAnnotations.size == 1) {
                     val valueTypeAnnotation = valueTypeAnnotations.first().second!!
                     val valueTypeAnnotationFqName = valueTypeAnnotation.fqName?.asString()
-                    if (valueTypeAnnotationFqName in valueDefTypeMap[declaredTypeFqName]!!) {
+                    if (valueTypeAnnotationFqName !in valueDefTypeMap[declaredTypeFqName]!!) {
                         holder.registerProblem(
                             typeReference,
-                            ValueDefBundle.message(
-                                "inspection.valuetype.type.error.display",
-                                valueTypeAnnotations.first().first.text, declaredTypeFqName
-                            ),
-                            ProblemHighlightType.GENERIC_ERROR
+                            "inspection.valuedef.error.type.mismatch",
+                            valueTypeAnnotations.first().first.text, declaredTypeFqName
                         )
                     }
                 }
@@ -98,7 +91,7 @@ class ValueDefInspection : AbstractKotlinInspection() {
 
                 if (function.isReturningUnsafeValueType()) return
                 val possibleReturnValues = function.possibleReturnValuesOrNull()
-                checkValueType(holder, returningExpression, possibleReturnValues, returnTypeValues)
+                checkValue(holder, returningExpression, possibleReturnValues, returnTypeValues)
             }
 
             override fun visitProperty(property: KtProperty) {
@@ -109,7 +102,7 @@ class ValueDefInspection : AbstractKotlinInspection() {
 
                 if (initializer.isUnsafeValueType()) return
                 val rhsValue = initializer.possibleConstantValuesOrNull()
-                checkValueType(holder, initializer, rhsValue, constantValues)
+                checkValue(holder, initializer, rhsValue, constantValues)
             }
 
             override fun visitBinaryExpression(expression: KtBinaryExpression) {
@@ -121,7 +114,7 @@ class ValueDefInspection : AbstractKotlinInspection() {
                     if (right.isUnsafeValueType()) return
 
                     val value = right.possibleConstantValuesOrNull()
-                    checkValueType(holder, right, value, values)
+                    checkValue(holder, right, value, values)
                 }
             }
 
@@ -154,7 +147,7 @@ class ValueDefInspection : AbstractKotlinInspection() {
 
                     if (constantValues != null) {
                         val argumentValue = argument.getArgumentExpression()?.possibleConstantValuesOrNull()
-                        checkValueType(holder, argument, argumentValue, constantValues.constantValue)
+                        checkValue(holder, argument, argumentValue, constantValues.constantValue)
                     }
                 }
             }

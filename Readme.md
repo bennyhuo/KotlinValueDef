@@ -2,7 +2,7 @@
 
 A IntelliJ plugin to provide check on 'value type' which is limited to numerical constant values. 
 
-This is similar with the Android annotations like @IntDef and @StringDef but more. 
+This is similar with the Android annotations like @IntDef and @StringDef and more. 
 
 ## Sample
 

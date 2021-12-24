@@ -17,12 +17,12 @@
         <!-- Add your extensions here -->
 
         <localInspection implementationClass="com.bennyhuo.kotlin.valuedef.ValueDefInspection"
-            groupPath="Kotlin"
-            groupBundle="messages.ValueType" groupKey="inspection.valuetype.name.display.name"
-            enabledByDefault="true"
-            level="ERROR"
-            language="kotlin"
-            key="inspection.valuetype.name.display.name" bundle="messages.ValueType"/>
+                         groupPath="Kotlin"
+                         groupBundle="messages.ValueType" groupKey="inspection.valuedef.group.name"
+                         enabledByDefault="true"
+                         level="ERROR"
+                         language="kotlin"
+                         key="inspection.valuedef.display.name" bundle="messages.ValueType"/>
     </extensions>
 
     <actions>
