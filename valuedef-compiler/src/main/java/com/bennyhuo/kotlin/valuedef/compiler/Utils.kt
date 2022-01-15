@@ -1,19 +1,21 @@
-package com.bennyhuo.kotlin.valuedef
+package com.bennyhuo.kotlin.valuedef.compiler
 
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
-import org.jetbrains.kotlin.idea.caches.resolve.analyze
-import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
-import org.jetbrains.kotlin.idea.debugger.sequence.psi.resolveType
-import org.jetbrains.kotlin.idea.inspections.AbstractPrimitiveRangeToInspection.Companion.constantValueOrNull
-import org.jetbrains.kotlin.idea.refactoring.fqName.fqName
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtAnnotatedExpression
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtNameReferenceExpression
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtReturnExpression
+import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.lastBlockStatementOrThis
 import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
+import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.descriptorUtil.annotationClass
-import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.kotlin.types.KotlinType
 
 /**
@@ -23,8 +25,8 @@ import org.jetbrains.kotlin.types.KotlinType
  * Computes the qualified name of this [KtAnnotationEntry].
  * Prefer to use [fqNameMatches], which checks the short name first and thus has better performance.
  */
-fun KtAnnotationEntry.getQualifiedName(): String? {
-    return analyze(BodyResolveMode.PARTIAL).get(BindingContext.ANNOTATION, this)?.fqName?.asString()
+fun KtAnnotationEntry.getQualifiedName(bindingContext: BindingContext): String? {
+    return bindingContext.get(BindingContext.ANNOTATION, this)?.fqName?.asString()
 }
 
 /**
@@ -32,25 +34,25 @@ fun KtAnnotationEntry.getQualifiedName(): String? {
  * Careful: this does *not* currently take into account Kotlin type aliases (https://kotlinlang.org/docs/reference/type-aliases.html).
  *   Fortunately, type aliases are extremely uncommon for simple annotation types.
  */
-fun KtAnnotationEntry.fqNameMatches(fqName: String): Boolean {
+fun KtAnnotationEntry.fqNameMatches(fqName: String, bindingContext: BindingContext): Boolean {
     // For inspiration, see IDELightClassGenerationSupport.KtUltraLightSupportImpl.findAnnotation in the Kotlin plugin.
     val shortName = shortName?.asString() ?: return false
-    return fqName.endsWith(shortName) && fqName == getQualifiedName()
+    return fqName.endsWith(shortName) && fqName == getQualifiedName(bindingContext)
 }
 
 fun AnnotationDescriptor.value(): ConstantValue<*>? {
     return allValueArguments[Name.identifier("value")]
 }
 
-fun KtAnnotationEntry.findAllValueDefAnnotations(): List<AnnotationDescriptor> {
-    return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
+fun KtAnnotationEntry.findAllValueDefAnnotations(bindingContext: BindingContext): List<AnnotationDescriptor> {
+    return bindingContext.get(BindingContext.ANNOTATION, this)
         ?.annotationClass?.annotations?.let { annotations ->
             valueDefs.mapNotNull { annotations.findAnnotation(FqName(it)) }
         } ?: emptyList()
 }
 
-fun KtAnnotationEntry.findFirstValueDefAnnotation(): AnnotationDescriptor? {
-    return resolveToDescriptorIfAny(bodyResolveMode = BodyResolveMode.PARTIAL)
+fun KtAnnotationEntry.findFirstValueDefAnnotation(bindingContext: BindingContext): AnnotationDescriptor? {
+    return bindingContext.get(BindingContext.ANNOTATION, this)
         ?.annotationClass?.annotations?.let { annotations ->
             valueDefs.asSequence().mapNotNull {
                 annotations.findAnnotation(FqName(it))
@@ -58,12 +60,12 @@ fun KtAnnotationEntry.findFirstValueDefAnnotation(): AnnotationDescriptor? {
         }
 }
 
-fun KtNameReferenceExpression.definedConstantValueOrNull(): ConstantValue<*>? {
-    return resolveType().definedConstantValueOrNull()
+fun KtNameReferenceExpression.definedConstantValueOrNull(bindingContext: BindingContext): ConstantValue<*>? {
+    return bindingContext.getType(this).definedConstantValueOrNull()
 }
 
-fun KtTypeReference.declaredTypeFqName(): String? {
-    return analyze(BodyResolveMode.PARTIAL).get(BindingContext.TYPE, this)?.fqName?.asString()
+fun KtTypeReference.declaredTypeFqName(bindingContext: BindingContext): String? {
+    return bindingContext.get(BindingContext.TYPE, this)?.fqName?.asString()
 }
 
 fun KotlinType?.definedConstantValueOrNull(): ConstantValue<*>? {
@@ -82,18 +84,23 @@ fun KotlinType?.definedConstantValueOrNull(): ConstantValue<*>? {
     }
 }
 
-fun KtExpression.possibleConstantValuesOrNull(): Any? {
-    return constantValueOrNull()?.value ?: resolveType().definedConstantValueOrNull()
+fun KtExpression.constantValueOrNull(context: BindingContext): ConstantValue<Any?>? {
+    val constant = ConstantExpressionEvaluator.getConstant(this, context) ?: return null
+    return constant.toConstantValue(getType(context) ?: return null)
 }
 
-fun KtExpression?.isUnsafeValueType(): Boolean {
+fun KtExpression.possibleConstantValuesOrNull(bindingContext: BindingContext): Any? {
+    return constantValueOrNull(bindingContext)?.value ?: bindingContext.getType(this).definedConstantValueOrNull()
+}
+
+fun KtExpression?.isUnsafeValueType(bindingContext: BindingContext): Boolean {
     return this != null
             && this is KtAnnotatedExpression
-            && annotationEntries.any { it.fqNameMatches(UNSAFE_VALUE_TYPE_NAME) }
+            && annotationEntries.any { it.fqNameMatches(UNSAFE_VALUE_TYPE_NAME, bindingContext) }
 }
 
-fun KtNamedFunction.isReturningUnsafeValueType(): Boolean {
-    return returningExpression?.isUnsafeValueType() ?: false
+fun KtNamedFunction.isReturningUnsafeValueType(bindingContext: BindingContext): Boolean {
+    return returningExpression?.isUnsafeValueType(bindingContext) ?: false
 }
 
 val KtNamedFunction.returningExpression: KtExpression?
@@ -108,8 +115,8 @@ val KtNamedFunction.returningExpression: KtExpression?
         }
     }
 
-fun KtNamedFunction.possibleReturnValuesOrNull(): Any? {
-    return returningExpression?.possibleConstantValuesOrNull()
+fun KtNamedFunction.possibleReturnValuesOrNull(bindingContext: BindingContext): Any? {
+    return returningExpression?.possibleConstantValuesOrNull(bindingContext)
 }
 
 inline fun <reified T> Any?.safeAs() = this as? T

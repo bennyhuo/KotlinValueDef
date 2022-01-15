@@ -1,35 +1,28 @@
-plugins {
-    java
-    kotlin("jvm") version "1.6.0"
-    id("org.jetbrains.intellij") version "1.3.0"
-}
-
-group = "com.bennyhuo.kotlin"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation(kotlin("stdlib"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-}
-
-// See https://github.com/JetBrains/gradle-intellij-plugin/
-intellij {
-    version.set("2021.2.3")
-    plugins.set(listOf("com.intellij.java", "org.jetbrains.kotlin"))
-}
-tasks {
-    patchPluginXml {
-        changeNotes.set("""
-            Add change notes here.<br>
-            <em>most HTML tags may be used</em>        """.trimIndent())
+buildscript {
+    repositories {
+        maven("https://mirrors.tencent.com/nexus/repository/maven-public")
     }
-    
+    dependencies {
+        classpath("com.vanniktech:gradle-maven-publish-plugin:0.18.0")
+    }
 }
-tasks.getByName<Test>("test") {
-    useJUnitPlatform()
+
+plugins {
+    kotlin("jvm") version "1.6.10" apply false
+    id("org.jetbrains.dokka") version "1.6.10" apply false
+    id("com.github.gmazzo.buildconfig") version "2.1.0" apply false
+    id("com.github.johnrengelman.shadow") version "6.1.0" apply false
+}
+
+subprojects {
+    repositories {
+        maven("https://mirrors.tencent.com/nexus/repository/maven-public")
+    }
+
+    if (!name.startsWith("sample") && parent?.name?.startsWith("sample") != true) {
+        group = property("GROUP").toString()
+        version = property("VERSION_NAME").toString()
+
+        apply(plugin = "com.vanniktech.maven.publish")
+    }
 }
