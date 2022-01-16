@@ -1,5 +1,6 @@
 package com.bennyhuo.kotlin.valuedef.compiler
 
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -8,6 +9,8 @@ import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtReturnExpression
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.lastBlockStatementOrThis
@@ -93,10 +96,23 @@ fun KtExpression.possibleConstantValuesOrNull(bindingContext: BindingContext): A
     return constantValueOrNull(bindingContext)?.value ?: bindingContext.getType(this).definedConstantValueOrNull()
 }
 
+fun KtExpression.type(bindingContext: BindingContext): KotlinType? {
+    return bindingContext.getType(this)
+}
+
 fun KtExpression?.isUnsafeValueType(bindingContext: BindingContext): Boolean {
     return this != null
             && this is KtAnnotatedExpression
             && annotationEntries.any { it.fqNameMatches(UNSAFE_VALUE_TYPE_NAME, bindingContext) }
+}
+
+fun KtProperty.type(bindingContext: BindingContext): KotlinType? {
+    return bindingContext.get(BindingContext.DECLARATION_TO_DESCRIPTOR, this)
+        .safeAs<CallableDescriptor>()?.returnType
+}
+
+fun KtNamedFunction.returnType(bindingContext: BindingContext): KotlinType? {
+    return bindingContext.getType(this)
 }
 
 fun KtNamedFunction.isReturningUnsafeValueType(bindingContext: BindingContext): Boolean {
