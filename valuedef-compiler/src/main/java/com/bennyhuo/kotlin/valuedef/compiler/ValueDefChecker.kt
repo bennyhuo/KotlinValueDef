@@ -20,16 +20,5 @@ class ValueDefChecker : DeclarationChecker {
     ) {
         val visitor = ValueDefCheckVisitor(context.trace, true)
         declaration.accept(visitor)
-        //declaration.acceptChildren(visitor)
-//        println("${this.hashCode()}-------------------")
-//        println("${declaration.text}@${declaration.hashCode()} - ${declaration.javaClass.name}")
-//        if (declaration is KtCallableDeclaration) {
-//            declaration.typeReference?.accept(visitor)
-//        }
-//        if (declaration is KtNamedFunction) {
-//            declaration.valueParameters.forEach {
-//                it.typeReference?.accept(visitor)
-//            }
-//        }
     }
 }

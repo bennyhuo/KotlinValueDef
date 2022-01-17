@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.valuedef.compiler
+package com.bennyhuo.kotlin.valuedef.common.error
 
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 

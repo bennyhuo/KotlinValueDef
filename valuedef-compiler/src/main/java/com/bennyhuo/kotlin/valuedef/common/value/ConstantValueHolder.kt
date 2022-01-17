@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.valuedef.compiler
+package com.bennyhuo.kotlin.valuedef.common.value
 
 import org.jetbrains.kotlin.resolve.constants.ArrayValue
 import org.jetbrains.kotlin.resolve.constants.ConstantValue

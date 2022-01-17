@@ -5,7 +5,7 @@ import com.bennyhuo.kotlin.compiletesting.extensions.module.compileAll
 import com.bennyhuo.kotlin.compiletesting.extensions.module.resolveAllDependencies
 import com.bennyhuo.kotlin.compiletesting.extensions.result.ResultCollector
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SingleFileModuleInfoLoader
-import com.bennyhuo.kotlin.valuedef.compiler.ValueDefCopyComponentRegistrar
+import com.bennyhuo.kotlin.valuedef.compiler.ValueDefComponentRegistrar
 import org.junit.Test
 import java.io.File
 
@@ -63,7 +63,7 @@ class ValueDefTest {
         val sourceModuleInfos = loader.loadSourceModuleInfos()
 
         val modules = sourceModuleInfos.map {
-            KotlinModule(it, componentRegistrars = listOf(ValueDefCopyComponentRegistrar()))
+            KotlinModule(it, componentRegistrars = listOf(ValueDefComponentRegistrar()))
         }
 
         modules.resolveAllDependencies()

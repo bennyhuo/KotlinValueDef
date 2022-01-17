@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.valuedef.compiler
+package com.bennyhuo.kotlin.valuedef.common.value
 
 /**
  * Created by benny.

@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.valuedef.compiler
+package com.bennyhuo.kotlin.valuedef.compiler.reporter
 
 import org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages
 import org.jetbrains.kotlin.diagnostics.rendering.DiagnosticFactoryToRendererMap

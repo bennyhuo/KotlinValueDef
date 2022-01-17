@@ -1,12 +1,13 @@
-package com.bennyhuo.kotlin.valuedef.compiler
+package com.bennyhuo.kotlin.valuedef.compiler.reporter
 
+import com.bennyhuo.kotlin.valuedef.common.error.ErrorKeys
+import com.bennyhuo.kotlin.valuedef.common.error.ErrorReporter
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory0
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory1
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory2
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.utils.addToStdlib.cast
-import javax.tools.Diagnostic
 
 /**
  * Created by benny at 2022/1/16 8:37 AM.

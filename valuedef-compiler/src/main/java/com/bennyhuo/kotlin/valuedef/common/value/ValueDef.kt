@@ -1,5 +1,8 @@
-package com.bennyhuo.kotlin.valuedef.compiler
+package com.bennyhuo.kotlin.valuedef.common.value
 
+import com.bennyhuo.kotlin.valuedef.common.utils.getRange
+import com.bennyhuo.kotlin.valuedef.common.utils.getValue
+import com.bennyhuo.kotlin.valuedef.common.utils.safeAs
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationArgumentVisitor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
@@ -47,19 +50,3 @@ val valueDefGetters = mapOf(
     INT_RANGE_VALUE_DEF_NAME to AnnotationDescriptor::getRange,
     STRING_VALUE_DEF_NAME to AnnotationDescriptor::getValue
 )
-
-fun AnnotationDescriptor.getValue(): ConstantValue<*>? {
-    return allValueArguments.get(Name.identifier("value"))
-}
-
-fun AnnotationDescriptor.getRange(): ConstantValue<*>? {
-    val min = allValueArguments.get(Name.identifier("min"))?.value?.safeAs<Int>() ?: return null
-    val max = allValueArguments.get(Name.identifier("max"))?.value?.safeAs<Int>() ?: return null
-    return IntRangeConstantValue(min .. max)
-}
-
-class IntRangeConstantValue(value: IntRange) : ConstantValue<IntRange>(value) {
-    override fun <R, D> accept(visitor: AnnotationArgumentVisitor<R, D>, data: D): R = TODO()
-
-    override fun getType(module: ModuleDescriptor): KotlinType = TODO()
-}

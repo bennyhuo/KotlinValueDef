@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 
 @AutoService(ComponentRegistrar::class)
-class ValueDefCopyComponentRegistrar : ComponentRegistrar {
+class ValueDefComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(
         project: MockProject,

@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.valuedef.compiler
+package com.bennyhuo.kotlin.valuedef.common.error
 
 /**
  * Created by benny at 2022/1/16 8:43 AM.
