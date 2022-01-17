@@ -5,14 +5,17 @@ plugins {
     java
     kotlin("kapt")
     id("com.github.gmazzo.buildconfig")
+    id("com.github.johnrengelman.shadow")
 }
 
 dependencies {
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib")
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable")
+    compileOnly("org.jetbrains.kotlin:kotlin-compiler")
 
     kapt("com.google.auto.service:auto-service:1.0.1")
     compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
+
+    implementation(project(":valuedef-common"))
 
     testImplementation(project(":valuedef-runtime"))
 
@@ -30,3 +33,5 @@ buildConfig {
     packageName("$group.valuedef")
     buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${project.property("KOTLIN_PLUGIN_ID")}\"")
 }
+
+testWithEmbedded()

@@ -1,6 +1,7 @@
 package com.bennyhuo.kotlin.valuedef.compiler.reporter;
 
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElement;
+
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory1;
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory2;
 import org.jetbrains.kotlin.diagnostics.Errors;

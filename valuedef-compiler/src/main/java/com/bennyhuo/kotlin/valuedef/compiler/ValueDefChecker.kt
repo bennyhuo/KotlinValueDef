@@ -1,10 +1,8 @@
 package com.bennyhuo.kotlin.valuedef.compiler
 
+import com.bennyhuo.kotlin.valuedef.compiler.reporter.CompilerCheckReporter
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.declarationRecursiveVisitor
 import org.jetbrains.kotlin.resolve.checkers.DeclarationChecker
 import org.jetbrains.kotlin.resolve.checkers.DeclarationCheckerContext
 
@@ -18,7 +16,9 @@ class ValueDefChecker : DeclarationChecker {
         descriptor: DeclarationDescriptor,
         context: DeclarationCheckerContext
     ) {
-        val visitor = ValueDefCheckVisitor(context.trace, true)
+        val visitor = ValueDefCompilerVisitor(
+            context.trace.bindingContext,
+            CompilerCheckReporter(context.trace))
         declaration.accept(visitor)
     }
 }

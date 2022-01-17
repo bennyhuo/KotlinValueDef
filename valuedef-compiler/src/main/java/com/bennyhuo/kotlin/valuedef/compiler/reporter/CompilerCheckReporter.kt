@@ -2,7 +2,7 @@ package com.bennyhuo.kotlin.valuedef.compiler.reporter
 
 import com.bennyhuo.kotlin.valuedef.common.error.ErrorKeys
 import com.bennyhuo.kotlin.valuedef.common.error.ErrorReporter
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory0
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory1
 import org.jetbrains.kotlin.diagnostics.DiagnosticFactory2

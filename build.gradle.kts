@@ -11,7 +11,6 @@ plugins {
     kotlin("jvm") version "1.6.10" apply false
     id("org.jetbrains.dokka") version "1.6.10" apply false
     id("com.github.gmazzo.buildconfig") version "2.1.0" apply false
-    id("com.github.johnrengelman.shadow") version "6.1.0" apply false
 }
 
 subprojects {

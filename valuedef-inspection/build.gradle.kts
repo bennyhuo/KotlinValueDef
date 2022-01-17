@@ -4,11 +4,10 @@ plugins {
     id("org.jetbrains.intellij") version "1.3.0"
 }
 
-group = "com.bennyhuo.kotlin"
-version = "1.0-SNAPSHOT"
-
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(project(":valuedef-common"))
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }

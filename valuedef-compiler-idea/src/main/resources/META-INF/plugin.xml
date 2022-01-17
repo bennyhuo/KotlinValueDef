@@ -1,0 +1,49 @@
+<idea-plugin>
+    <id>com.bennyhuo.kotlin.valuedef.idea</id>
+    <name>Kotlin ValueDef</name>
+    <version>1.0</version>
+    <vendor email="bennyhuo@kotliner.cn" url="http://www.bennyhuo.com">Bennyhuo</vendor>
+
+    <description><![CDATA[
+    ValueDef works like the Android lint for IntDef, but it also takes effect on the Kotlin compiler.]]>
+    </description>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for description -->
+    <idea-version since-build="173.0"/>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.kotlin</depends>
+    <depends>com.intellij.gradle</depends>
+
+    <extensionPoints>
+        <extensionPoint
+            interface="com.bennyhuo.kotlin.valuedef.idea.ValueDefAvailabilityProvider"
+            dynamic="true"
+            area="IDEA_PROJECT"
+            name="availabilityProvider"/>
+    </extensionPoints>
+
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <storageComponentContainerContributor implementation="com.bennyhuo.kotlin.valuedef.idea.IdeValueDefComponentContainerContributor"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
+        <projectResolve implementation="com.bennyhuo.kotlin.valuedef.idea.ValueDefProjectResolverExtension"
+                        order="last"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <externalProjectDataService implementation="com.bennyhuo.kotlin.valuedef.idea.ValueDefIdeModelDataService"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.bennyhuo.kotlin.valuedef.idea">
+        <availabilityProvider implementation="com.bennyhuo.kotlin.valuedef.idea.GradleValueDefAvailabilityProvider"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+
+</idea-plugin>
